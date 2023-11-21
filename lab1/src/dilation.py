@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 
-
+video_path = 'ffplay rtsp://admin:UniVision_74_ceil@192.168.0.74:554/media/video2'  # путь к видео
 def gstreamer_pipeline(
         capture_width=1280,
         capture_height=720,
@@ -49,14 +49,12 @@ def dilate_without_opencv(binary_image, kernel):
     height, width = binary_image.shape
     dilated_image = np.zeros((height, width), dtype=np.uint8)
 
-    for i in range(height):
-        for j in range(width):
-            if binary_image[i, j] == 255:
-                for m in range(kernel.shape[0]):
-                    for n in range(kernel.shape[1]):
-                        if kernel[m, n] == 1:
-                            if i + m < height and j + n < width:
-                                dilated_image[i + m, j + n] = 255
+    kernel_indices = np.argwhere(kernel == 1)
+
+    for i, j in zip(*np.where(binary_image == 255)):
+        for m, n in kernel_indices:
+            if 0 <= i + m < height and 0 <= j + n < width:
+                dilated_image[i + m, j + n] = 255
 
     return dilated_image
 
@@ -78,7 +76,7 @@ def compare_execution_time(binary_image, kernel):
 
 def main():
     print(gstreamer_pipeline(flip_method=4))
-    cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=4), cv2.CAP_GSTREAMER)
+    cap = cv2.VideoCapture(video_path)
     kernel = np.array([[1, 1, 1],
                        [1, 1, 1],
                        [1, 1, 1]], dtype=np.uint8)
