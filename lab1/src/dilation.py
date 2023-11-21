@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import time
 
-video_path = 'ffplay rtsp://admin:UniVision_74_ceil@192.168.0.74:554/media/video2'  # путь к видео
 def gstreamer_pipeline(
         capture_width=1280,
         capture_height=720,
@@ -76,7 +75,7 @@ def compare_execution_time(binary_image, kernel):
 
 def main():
     print(gstreamer_pipeline(flip_method=4))
-    cap = cv2.VideoCapture(video_path)
+    cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=4), cv2.CAP_GSTREAMER)
     kernel = np.array([[1, 1, 1],
                        [1, 1, 1],
                        [1, 1, 1]], dtype=np.uint8)
