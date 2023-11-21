@@ -44,18 +44,30 @@ def dilate_with_opencv(binary_image, kernel):
 
 
 # Native dilatation
-def dilate_without_opencv(binary_image, kernel):
-    height, width = binary_image.shape
-    dilated_image = np.zeros((height, width), dtype=np.uint8)
+def dilate_without_opencv(binary_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
+    """
+    Return dilated image
+    >>> dilation(np.array([[True, False, True]]), np.array([[0, 1, 0]]))
+    array([[False, False, False]])
+    >>> dilation(np.array([[False, False, True]]), np.array([[1, 0, 1]]))
+    array([[False, False, False]])
+    """
+    output = np.zeros_like(image)
+    image_padded = np.zeros(
+        (image.shape[0] + kernel.shape[0] - 1, image.shape[1] + kernel.shape[1] - 1)
+    )
 
-    kernel_indices = np.argwhere(kernel == 1)
+    # Copy image to padded image
+    image_padded[kernel.shape[0] - 2 : -1 :, kernel.shape[1] - 2 : -1 :] = image
 
-    for i, j in zip(*np.where(binary_image == 255)):
-        for m, n in kernel_indices:
-            if 0 <= i + m < height and 0 <= j + n < width:
-                dilated_image[i + m, j + n] = 255
-
-    return dilated_image
+    # Iterate over image & apply kernel
+    for x in range(image.shape[1]):
+        for y in range(image.shape[0]):
+            summation = (
+                kernel * image_padded[y : y + kernel.shape[0], x : x + kernel.shape[1]]
+            ).sum()
+            output[y, x] = int(summation > 0)
+    return output
 
 
 def compare_execution_time(binary_image, kernel):
