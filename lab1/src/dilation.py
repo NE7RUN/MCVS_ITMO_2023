@@ -44,12 +44,12 @@ def dilate_with_opencv(binary_image, kernel):
 
 
 # Native dilatation
-def dilate_without_opencv(binary_image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
+def dilate_without_opencv(image: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     """
     Return dilated image
-    >>> dilation(np.array([[True, False, True]]), np.array([[0, 1, 0]]))
+    >>> dilate_without_opencv(np.array([[True, False, True]]), np.array([[0, 1, 0]]))
     array([[False, False, False]])
-    >>> dilation(np.array([[False, False, True]]), np.array([[1, 0, 1]]))
+    >>> dilate_without_opencv(np.array([[False, False, True]]), np.array([[1, 0, 1]]))
     array([[False, False, False]])
     """
     output = np.zeros_like(image)
