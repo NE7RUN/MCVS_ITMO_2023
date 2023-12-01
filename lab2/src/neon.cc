@@ -29,9 +29,9 @@ void normalize_grayscale_neon(const uint8_t *gray, uint8_t *normalized_gray, int
 
 int main(int argc, char **argv)
 {
-    if (argc != 2)
+    if (argc != 4)
     {
-        cout << "Usage: " << argv[0] << " image_path" << endl;
+        cout << "Usage: " << argv[0] << " image_path min_val max_val" << endl;
         return -1;
     }
 
@@ -45,12 +45,15 @@ int main(int argc, char **argv)
 
     uint8_t *normalized_gray_arr_neon = gray_image.data;
 
-    uint8_t min_val = 50;
-    uint8_t max_val = 200;
+    uint8_t min_val = stoi(argv[2]);
+    uint8_t max_val = stoi(argv[3]);
 
-    normalize_grayscale_neon(normalized_gray_arr_neon, normalized_gray_arr_neon, num_pixels, min_val, max_val);
+    Mat normalized_image_neon(gray_image.size(), CV_8UC1);
+    uint8_t *normalized_gray_arr_neon_new = normalized_image_neon.data;
 
-    imwrite("normalized_with_neon.png", gray_image);
+    normalize_grayscale_neon(normalized_gray_arr_neon, normalized_gray_arr_neon_new, num_pixels, min_val, max_val);
+
+    imwrite("normalized_with_neon.png", normalized_image_neon);
 
     return 0;
 }

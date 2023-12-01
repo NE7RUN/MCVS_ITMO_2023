@@ -20,28 +20,31 @@ void normalize_grayscale(const uint8_t *gray, uint8_t *normalize_gray, int num_p
 
 int main(int argc, char **argv)
 {
-    if (argc != 2)
+    if (argc != 4)
     {
-        cout << "Usage: " << argv[0] << " image_path" << endl;
+        cerr << "Usage: " << argv[0] << " image_path min_val max_val" << endl;
         return -1;
     }
 
     Mat gray_image = imread(argv[1], IMREAD_GRAYSCALE);
     if (!gray_image.data)
     {
-        cout << "Could not open the image" << endl;
+        cerr << "Could not open the image" << endl;
         return -1;
     }
     int num_pixels = gray_image.cols * gray_image.rows;
 
     uint8_t *normalized_gray_arr = gray_image.data;
 
-    uint8_t min_val = 50;
-    uint8_t max_val = 200;
+    uint8_t min_val = stoi(argv[2]);
+    uint8_t max_val = stoi(argv[3]);
 
-    normalize_grayscale(normalized_gray_arr, normalized_gray_arr, num_pixels, min_val, max_val);
+    Mat normalized_image(gray_image.size(), CV_8UC1);
+    uint8_t *normalized_gray_arr_new = normalized_image.data;
 
-    imwrite("normalized_without_neon.png", gray_image);
+    normalize_grayscale(normalized_gray_arr, normalized_gray_arr_new, num_pixels, min_val, max_val);
+
+    imwrite("normalized_without_neon.png", normalized_image);
 
     return 0;
 }
