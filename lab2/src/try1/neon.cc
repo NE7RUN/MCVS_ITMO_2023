@@ -7,6 +7,7 @@
 using namespace std;
 using namespace cv;
 
+// Не меняйте покамись этот файл, хочу потестить
 void normalize_grayscale_neon(const uint8_t *gray, uint8_t *normalized_gray, int num_pixels, uint8_t min_val, uint8_t max_val)
 {
     num_pixels /= 8;

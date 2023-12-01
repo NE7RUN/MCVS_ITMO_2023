@@ -6,6 +6,7 @@
 using namespace std;
 using namespace cv;
 
+// Не меняйте покамись этот файл, хочу потестить.
 void normalize_grayscale(const uint8_t *gray, uint8_t *normalize_gray, int num_pixels, uint8_t min_val, uint8_t max_val)
 {
     auto t1 = chrono::high_resolution_clock::now();
