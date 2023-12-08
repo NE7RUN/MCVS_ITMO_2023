@@ -124,3 +124,5 @@ void normalise_gray_neon(const uint8_t* gray, uint8_t* normalised,\
 
 
 Векторный алгоритм во всех случаях превосходит обычный в несколько раз по скорости
+
+![Изображение 1](./img/normalized_image.png) ![Изображение 2](./images/normalized_neon_image.png)
