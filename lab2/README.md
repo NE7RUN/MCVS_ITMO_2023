@@ -100,7 +100,7 @@ void normalise_gray_neon(const uint8_t* gray, uint8_t* normalised,\
 |  1280x720 обычный  | 20680 | 6395 | 6147 | 5160 |
 | 1280x720 векторный | 16074 | 2675 | 1902 | 2927 |
 
-![image_2023-12-08_18-06-22](/home/radmirkus/Downloads/Telegram Desktop/image_2023-12-08_18-06-22.png)
+![graphics.png](img/graphics.png)
 
 
 
