@@ -108,4 +108,4 @@ void normalise_gray_neon(const uint8_t* gray, uint8_t* normalised,\
 
 Слева до нормирования, справа после
 
-![image-20231209152240229](/home/radmirkus/.config/Typora/typora-user-images/image-20231209152240229.png)
+![lenna_report](img/lenna_report.png)
