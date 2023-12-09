@@ -8,10 +8,10 @@
 using namespace std;
 using namespace cv;
 
-void normalise_gray(const uint8_t* gray, uint8_t* normalised,\
+int normalise_gray(const uint8_t* gray, uint8_t* normalised,\
  int num_pixels, uint8_t x_min, uint8_t x_max)
 {
-  cout << "inside function normalise_gray" << endl;
+  //cout << "inside function normalise_gray" << endl;
   auto t1 = chrono::high_resolution_clock::now();
 
   for(int i=0; i<num_pixels; ++i) {
@@ -21,15 +21,17 @@ void normalise_gray(const uint8_t* gray, uint8_t* normalised,\
 
   auto t2 = chrono::high_resolution_clock::now();
   auto duration = chrono::duration_cast<chrono::microseconds>(t2-t1).count();
-  cout << duration << " us" << endl;
+  //cout << duration << " us" << endl;
+  return duration;
 }
 
-void normalise_gray_neon(const uint8_t* gray, uint8_t* normalised,\
+int normalise_gray_neon(const uint8_t* gray, uint8_t* normalised,\
   int num_pixels, uint8_t x_min, uint8_t x_max)
 {
-  num_pixels /= 8;
+  num_pixels /= 4;
   float x_koef = (float)(x_max - x_min) * 255;
 
+  // uint8x16_t
   float32x4_t x_mins = vdupq_n_f32(x_min);
   float32x4_t x_koefs = vdupq_n_f32(x_koef);
 
@@ -37,6 +39,7 @@ void normalise_gray_neon(const uint8_t* gray, uint8_t* normalised,\
   for(int i=0; i<num_pixels; ++i, gray+=4, normalised+=4) {
     float tmp_pixels_4_f32[] = { (float)gray[0], (float)gray[1], (float)gray[2], (float)gray[3] };
     float32x4_t pixels_4 = vld1q_f32(tmp_pixels_4_f32);
+    // uint8x4_t pixels_4 = vld4_u8(gray);
     pixels_4 = vsubq_f32(pixels_4, x_mins);
     pixels_4 = vmulq_f32(pixels_4, x_koefs);
     float pixels_4_f32[] = {0.0, 0.0, 0.0, 0.0};
@@ -46,8 +49,9 @@ void normalise_gray_neon(const uint8_t* gray, uint8_t* normalised,\
 
   auto t2_neon = chrono::high_resolution_clock::now();
   auto duration_neon = chrono::duration_cast<chrono::microseconds>(t2_neon-t1_neon).count();
-  cout << "inside function rgb_to_gray_neon" << endl;
-  cout << duration_neon << " us" << endl;
+  //cout << "inside function rgb_to_gray_neon" << endl;
+  //cout << duration_neon << " us" << endl;
+  return duration_neon;
 }
 
 int main(int argc,char** argv)
@@ -83,21 +87,33 @@ int main(int argc,char** argv)
   // find min and max values for normalisation
   uint8_t x_min = atoi(argv[2]);
   uint8_t x_max = atoi(argv[3]);
+  // uint8_t* gray = gray_arr;
 
   cout << "min pixel value: " << (int)x_min << endl; 
   cout << "max pixel value: " << (int)x_max << endl;
 
   uint8_t* gray;
+  int mean_lin = 0;
+  int mean_vec = 0;
+  int repeats = 15;
   
+  cout << "linear algorithm" << endl;
+  for(int i = repeats;i>0;i--) {
   gray = gray_arr;
   normalised_arr = normalised_image.data;
-  normalise_gray(gray_arr, normalised_arr, num_pixels, x_min, x_max);
+  mean_lin += normalise_gray(gray_arr, normalised_arr, num_pixels, x_min, x_max);
   imwrite("normalised_image.png", normalised_image);
+  }
+  cout << "mean linear " << (int)mean_lin/repeats << endl;
 
+  cout << "linear algorithm" << endl;
+  for(int i = repeats;i>0;i--) {
   gray = gray_arr;
   normalised_arr = normalised_image.data;
-  normalise_gray_neon(gray_arr, normalised_arr, num_pixels, x_min, x_max);
+  mean_vec += normalise_gray_neon(gray_arr, normalised_arr, num_pixels, x_min, x_max);
   imwrite("normalised_neon_image.png", normalised_image);
+  } 
+  cout << "mean linear " << (int)mean_vec/repeats << endl;
 
   return 0;
 }
