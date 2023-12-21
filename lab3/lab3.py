@@ -12,7 +12,11 @@ from torch2trt import torch2trt
 from torch2trt import TRTModule
 
 
-# Create dictionary with classes
+# 1. Оставляем 1 файл
+# 2. Наводим марафет в этом 1 файле
+# 3. Указывать путь к папке с изображениями
+# 4. Замена изображений
+# 5. config не трогаем
 with open('./config/classes.csv', 'r') as fd:
     dc = csv.DictReader(fd)
     classes = {}
@@ -66,18 +70,17 @@ def classify_image(image: Image,
     image_tensor = image_tensor.unsqueeze_(0)
     input = Variable(image_tensor).to(device)
 
-    # Predict image class
+
     output = model(input)
     return output.data.cpu().numpy().argmax()
 
 
 def print_usage():
-    print("Usage: python lab3.py [--trt] <image> [image...]")
+    print("Usage: python lab3.py --trt <image(s)_path>")
 
 
 def main(argv: list,
          trt: bool = False):
-    # Chek arguments and enable TensorRT if True
     try:
         opts, _ = getopt.getopt(argv, "", ["trt"])
         if len(opts) == 1:
@@ -89,7 +92,6 @@ def main(argv: list,
         print_usage()
         sys.exit(1)
 
-    # Open images
     images = []
     for img_path in argv:
         try:
@@ -98,7 +100,6 @@ def main(argv: list,
         except FileNotFoundError:
             print(img_path + " not found")
 
-    # Exit with error if there is no images
     if len(images) == 0:
         print_usage()
         sys.exit(1)
