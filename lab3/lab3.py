@@ -11,32 +11,28 @@ from torchvision.models.alexnet import alexnet
 from torch2trt import torch2trt
 from torch2trt import TRTModule
 
-
-# 1. Оставляем 1 файл
-# 2. Наводим марафет в этом 1 файле
-# 3. Указывать путь к папке с изображениями
-# 4. Замена изображений
-# 5. config не трогаем
+# Classes load
 with open('./config/classes.csv', 'r') as fd:
     dc = csv.DictReader(fd)
     classes = {}
     for line in dc:
         classes[int(line['class_id'])] = line['class_name']
 
-
+# Defining a device to work with PyTorch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Define transformations for input images
 transform = transforms.Compose([transforms.Resize(256),
                                 transforms.CenterCrop(224),
                                 transforms.ToTensor()])
 
+# Output directory 
 Path("./output").mkdir(exist_ok=True)
-
 
 def process_images(images: list,
                    trt: bool):
     timest = time.time()
-    if trt:
+    if trt:                                                   # Defining trt for opt
         x = torch.ones((1, 3, 224, 224)).cuda()
         model = alexnet(pretrained=True).eval().cuda()
         model_trt = torch2trt(model, [x])
@@ -44,14 +40,16 @@ def process_images(images: list,
         model = model_trt
         model = TRTModule()
         model.load_state_dict(torch.load('alexnet_trt.pth'))
-    else:
+    else:                                                       # usual AlexNet
         model = alexnet(pretrained=True).eval().cuda()
     print("Model load time {}".format(time.time() - timest))
 
+    # Image classification using the model
     timest = time.time()
     for image in images:
         index = classify_image(image, model)
         output_text = str(index) + ': ' + classes[index]
+        # Output image edit
         edit = ImageDraw.Draw(image)
         edit.rectangle((0, image.height - 20, image.width, image.height),
                        fill=(255, 255, 255))
@@ -63,24 +61,23 @@ def process_images(images: list,
     print('Memory allocated: ' + str(torch.cuda.memory_allocated()))
     print('Max memory allocated: ' + str(torch.cuda.max_memory_allocated()))
 
-
+# model go brrrrr
 def classify_image(image: Image,
                    model) -> int:
     image_tensor = transform(image).float()
     image_tensor = image_tensor.unsqueeze_(0)
     input = Variable(image_tensor).to(device)
 
-
+    #class index return
     output = model(input)
     return output.data.cpu().numpy().argmax()
 
 
 def print_usage():
-    print("Usage: python lab3.py --trt <image(s)_path>")
+    print("Usage: python lab3.py --trt /path/to/images/directory")
 
 
-def main(argv: list,
-         trt: bool = False):
+def main(argv: list, trt: bool = False):
     try:
         opts, _ = getopt.getopt(argv, "", ["trt"])
         if len(opts) == 1:
@@ -92,20 +89,28 @@ def main(argv: list,
         print_usage()
         sys.exit(1)
 
-    images = []
-    for img_path in argv:
-        try:
-            image = Image.open(img_path)
-            images.append(image)
-        except FileNotFoundError:
-            print(img_path + " not found")
-
-    if len(images) == 0:
+    # Get the path to the directory from the command line arguments
+    if argv:
+        directory_path = argv[0]
+    else:
         print_usage()
         sys.exit(1)
 
-    process_images(images, trt)
+    if not Path(directory_path).is_dir():
+        print(f"Error: {directory_path} is not a directory.")
+        sys.exit(1)
 
+    # Get files
+    image_files = [f for f in Path(directory_path).glob("*.jpg")]
+
+    if not image_files:
+        print(f"Error: No JPG images found in {directory_path}.")
+        sys.exit(1)
+
+    # make list
+    images = [Image.open(img_path) for img_path in image_files]
+
+    process_images(images, trt)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
