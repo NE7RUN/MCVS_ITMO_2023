@@ -115,14 +115,108 @@ TensorRT при одинаковых входных данных.
 
 
 ## Описание разработанной системы
+Для выполнения лабораторной работы была выбрана модель **alexnet** - сверточная нейронная сеть, которая оказала большое 
+влияние на развитие машинного обучения, в особенности — на алгоритмы компьютерного зрения. Сеть с большим отрывом 
+выиграла конкурс по распознаванию изображений ImageNet LSVRC-2012 в 2012 году (с количеством ошибок 15,3% против 26,2% у второго места).
 
+Кроме этого использовались библиотеки torch, torchvision и torch2trt.
+#### Функция по обработке изображений:
+
+```python
+def image_processing(images: list,
+                   trt: bool):
+    times = time.time()
+    if trt:
+        # x = torch.ones((1, 3, 224, 224)).cuda()
+        # model = alexnet(pretrained=True).eval().cuda()
+        # model_trt = torch2trt(model, [x])
+        # torch.save(model_trt.state_dict(), 'alexnet_trt.pth')
+        # model = model_trt
+        model = TRTModule()
+        model.load_state_dict(torch.load('alexnet_trt.pth'))
+    else:
+        model = alexnet(pretrained=True).eval().cuda()
+    print("Model load time {}".format(time.time() - times))
+
+    times = time.time()
+    for image in images:
+        index = image_classification(image, model)
+        output_text = str(index) + ': ' + classes[index]
+        edit = ImageDraw.Draw(image)
+        edit.rectangle((0, image.height - 20, image.width, image.height),
+                       fill=(255, 255, 255))
+        edit.text((50, image.height-15), output_text, (0, 0, 0),
+                  font=ImageFont.load_default())
+        image.save('./output/' + image.filename.split('/')[-1])
+    print(images)
+    print("Image(s) processing time {}".format(time.time() - times))
+    print('Memory allocated: ' + str(torch.cuda.memory_allocated()))
+    print('Max memory allocated: ' + str(torch.cuda.max_memory_allocated()))
+```
+
+#### Функция по классификация изображений:
+
+```python
+def image_classification(image: Image,
+                   model) -> int:
+    image_tensor = transform(image).float()
+    image_tensor = image_tensor.unsqueeze_(0)
+    input = Variable(image_tensor).to(device)
+
+    output = model(input)
+    return output.data.cpu().numpy().argmax()
+```
+
+#### Основная функция:
+
+```python
+def main(argv: list,
+         trt: bool = False):
+    try:
+        opts, empty = getopt.getopt(argv, "", ["trt"])
+        if len(opts) == 1:
+            trt = True
+            argv.remove('--trt')
+        elif len(opts) > 1:
+            raise getopt.GetoptError("is not a directory.")
+    except getopt.GetoptError:
+        print_usage()
+        sys.exit(1)
+
+    for file in glob.glob('data/*.jpg', recursive=True):
+        try:
+            image = Image.open(file)
+            images.append(image)
+        except FileNotFoundError:
+            print(file + " not found")
+
+    if len(images) == 0:
+        print_usage()
+        sys.exit(1)
+
+    image_processing(images, trt)
+```
 
 ## Результаты работы и тестирования системы
 
+Таблица результатов тестирования модели по классификации 11 изображений:
 
+|        Имя        | Работа модели, сек | 	Обработка изображений, сек	 | Максимальное количество выделенной памяти, байт |
+|:-----------------:|:------------------:|:----------------------------:|:-----------------------------------------------:|
+|      Без TRT      |       	20.15       |            63.43             |                   	257949184                    |
+|        TRT        |        	60         |             3.5              |                     	606208                     |
+| TRT (сохраненное состояние) |        	35        |             3.5              |                     	606208                     |
+
+![img2.png](./img/img2.png)
+Рис. 2. Результаты работы без TRT
 
 ## Вывод
-
+Процесс загрузки готовой модели оказался не сложным, так как ее веса и сама модель имеется в библиотеке torchvision.
+Кроме того по результатам тестирования стало понятно, что обработка одного кадра с TRT в 9-10 раз быстрее, чем обработка
+аналогичной моделью без TRT и потребляет намного меньше памяти. 
 
 ## Использованные источники
 
+#### [Документация Torch](https://pytorch.org/docs/stable/index.html)
+#### [Документация Torchvision](https://pytorch.org/vision/stable/index.html)
+#### [Документация Torch2trt](https://github.com/NVIDIA-AI-IOT/torch2trt)
