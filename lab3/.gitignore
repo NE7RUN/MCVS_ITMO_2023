@@ -1,6 +1,6 @@
 ### Lab_3
 output/
-### IntelliJ IDEA ###
+alexnet_trt.pth
 .idea
 *.iws
 *.iml
