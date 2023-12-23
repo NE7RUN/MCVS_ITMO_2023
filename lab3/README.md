@@ -129,11 +129,11 @@ def image_processing(images: list,
                    trt: bool):
     times = time.time()
     if trt:
-        # x = torch.ones((1, 3, 224, 224)).cuda()
-        # model = alexnet(pretrained=True).eval().cuda()
-        # model_trt = torch2trt(model, [x])
-        # torch.save(model_trt.state_dict(), 'alexnet_trt.pth')
-        # model = model_trt
+        x = torch.ones((1, 3, 224, 224)).cuda()
+        model = alexnet(pretrained=True).eval().cuda()
+        model_trt = torch2trt(model, [x])
+        torch.save(model_trt.state_dict(), 'alexnet_trt.pth')
+        model = model_trt
         model = TRTModule()
         model.load_state_dict(torch.load('alexnet_trt.pth'))
     else:
@@ -218,6 +218,18 @@ def main(argv: list,
 ![img3.png](./img/img3.png)
 Рис. 4. Результаты c TRT (сохраненное состояние)
 
+### Результаты классификации картинок
+
+![img6.png](./img/img6.jpg)
+Рис. 5. Результаты классификации без TRT
+
+![img5.png](./img/img5.jpg)
+Рис. 6. Результаты классификации с TRT
+
+**Примечание**
+
+   В целой модель без TRT и с TRT при классификации показали идентичные результаты.
+
 ## Вывод
 
 Процесс загрузки готовой модели оказался не сложным, так как ее веса и сама модель имеется в библиотеке torchvision.
@@ -226,8 +238,8 @@ def main(argv: list,
 
 ## Использованные источники
 
-### [Документация Torch](https://pytorch.org/docs/stable/index.html)
+#### [Документация Torch](https://pytorch.org/docs/stable/index.html)
 
-### [Документация Torchvision](https://pytorch.org/vision/stable/index.html)
+#### [Документация Torchvision](https://pytorch.org/vision/stable/index.html)
 
-### [Документация Torch2trt](https://github.com/NVIDIA-AI-IOT/torch2trt)
+#### [Документация Torch2trt](https://github.com/NVIDIA-AI-IOT/torch2trt)
